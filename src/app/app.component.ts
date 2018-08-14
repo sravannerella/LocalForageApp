@@ -9,16 +9,15 @@ import { ToastrService } from 'ngx-toastr';
     styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-    myForm: FormGroup;
-    email: FormControl;
-    password: FormControl;
-    dataJSON = {};
-    names: String[] = [];
-
     userStorage: LocalForage;
     instances: LocalForage[] = [];
-    data: string[] = [];
     instanceNum = 0;
+    driver;
+    timer;
+    start;
+    end;
+    logs = [];
+    count = 0;
 
     constructor(private toastr: ToastrService) {
 
@@ -28,28 +27,11 @@ export class AppComponent {
             name: 'localForageDB' + this.instanceNum, // DB NAME
             storeName: 'logins', // TABLE or collection NAME
             driver: [
-                localForage.INDEXEDDB,
-                localForage.WEBSQL,
-                localForage.LOCALSTORAGE
+                localForage.WEBSQL
             ]
         });
 
         this.instances.push(this.userStorage);
-
-        this.initializeFormControls();
-        this.initForm();
-    }
-
-    initializeFormControls() {
-        this.email = new FormControl('', [Validators.required, Validators.pattern('[^ @]*@[^ @]*')]);
-        this.password = new FormControl('', [Validators.required, Validators.minLength(4)]);
-    }
-
-    initForm() {
-        this.myForm = new FormGroup({
-            email: this.email,
-            password: this.password
-        });
     }
 
     dropDB() {
@@ -59,52 +41,66 @@ export class AppComponent {
         });
     }
 
+    changeDriver(driver) {
+        if ( driver === 'indexed' ) {
+            this.userStorage.setDriver(localForage.INDEXEDDB).then( () => {
+                this.driver = this.userStorage.driver();
+            } );
+        } else {
+            this.userStorage.setDriver(localForage.WEBSQL).then( () => {
+                this.driver = this.userStorage.driver();
+            } );
+        }
+    }
+
     newInstance() {
         this.instanceNum++;
         this.userStorage = localForage.createInstance({
             name: 'localForageDB' + this.instanceNum,
             storeName: 'logins',
             driver: [
-                localForage.INDEXEDDB,
-                localForage.WEBSQL,
-                localForage.LOCALSTORAGE
+                localForage.INDEXEDDB
             ]
         });
         this.instances.push(this.userStorage);
     }
 
-    showInstances() {
-        this.instances.map( (instance) => {
-            if (this.names.indexOf(instance.config().name) === -1 ) {
-                this.names.push(instance.config().name);
-                instance.getItem('key').then( (data: string) => {
-                    this.data.push(JSON.parse(data));
-                });
-            }
+    startTime() {
+        this.driver = this.userStorage.driver();
+        this.start = new Date();
+    }
+
+    stopTime(task) {
+        this.end = new Date();
+        console.log('TIME TAKEN:', (this.end - this.start) );
+        this.logs.push({
+            task: task,
+            driver: this.userStorage.driver(),
+            timeTaken: (this.end - this.start)
         });
     }
 
-    getDataFromDB() {
-        const self = this;
-        this.userStorage.getItem('key').then( (newData) => {
-            self.dataJSON = JSON.parse(JSON.stringify(newData));
-        }, (err) => {
-            console.error('ERROR: ', err);
-        });
-    }
-
-    formSubmit() {
-        if (this.myForm.valid) {
-            console.log('Valid');
-            const data = {'email': this.email.value, 'pass': this.password.value};
-            this.userStorage.setItem('key', JSON.stringify(data));
-            console.log(localForage.driver());
-            this.toastr.success('', 'Submitted');
-        } else {
-            this.toastr.error('', 'Invalid FORM');
+    insert() {
+        this.startTime();
+        while (this.count < 10000) {
+            const data = {
+                email: 'instance' + this.count,
+                pass: 'pass' + this.count
+            };
+            this.userStorage.setItem('key' + this.count , data);
+            this.count++;
         }
-        this.myForm.reset();
+        this.stopTime('Insert');
     }
 
+    delete() {
+        this.count = 0;
+        this.startTime();
+        while (this.count < 1000) {
+            this.userStorage.removeItem('key' + this.count);
+            this.count++;
+        }
+        this.stopTime('Delete');
+    }
 
 }

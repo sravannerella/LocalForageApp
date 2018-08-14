@@ -1,28 +1,17 @@
 <div class="container-fluid">
-	<div class="box">
-		<form [formGroup]="myForm" (ngSubmit)="formSubmit()" novalidate>
-			<div class="form-group">
-				<label for="email">Email address</label>
-				<input type="email" class="form-control" formControlName="email" placeholder="Enter email">
-			</div>
-			
-			<div class="form-group">
-				<label for="password">Password</label>
-				<input type="password" class="form-control" formControlName="password" placeholder="Password">
-			</div>
+	
+	<h5>Operations</h5>
+	<button class="btn btn-dark" (click)="insert()">Insert Records</button>
+	<button class="btn btn-danger" (click)="delete()">Delete Records</button>
+	
+	
+	<h5>Change Driver Setting</h5>
 
-			<button type="submit" class="btn btn-primary" style="margin-bottom: 8px;">Submit</button>
+	<button class="btn btn-debug" (click)="changeDriver('websql')">WebSql</button>
+	<button class="btn btn-debug" (click)="changeDriver('indexed')">IndexedDB</button>
 
-			<label class="btn btn-dark" (click)="getDataFromDB()">Grab Data</label>
+	<h5>Logs: </h5>
+	Using: {{driver}}
+	<p *ngFor="let log of logs"> {{log.task}} in {{log.driver}} - {{log.timeTaken}} milliseconds </p>
 
-			<label class="btn btn-danger" (click)="dropDB()">Drop DB</label>
-
-			<label class="btn btn-warning" (click)="newInstance()">New Instance</label>
-
-			<label class="btn btn-warning" (click)="showInstances()">Show Instance</label>
-			<pre>{{ dataJSON | json }}</pre>
-			
-			<pre *ngFor="let name of names; let i = index">{{name}} = {{data[i] | json}}</pre>
-		</form>
-	</div>
 </div>
