@@ -17,7 +17,9 @@ export class AppComponent {
     start;
     end;
     logs = [];
+    counter = 0;
     count = 0;
+    records = 1000;
 
     constructor(private toastr: ToastrService) {
 
@@ -82,25 +84,42 @@ export class AppComponent {
 
     insert() {
         this.startTime();
-        while (this.count < 10000) {
+        while (this.count < this.records) {
             const data = {
                 email: 'instance' + this.count,
                 pass: 'pass' + this.count
             };
-            this.userStorage.setItem('key' + this.count , data);
+            this.userStorage.setItem('key' + this.count , data).then( (res) => {
+                this.counter++;
+                if (this.counter === this.records) {
+                    this.stopTime('Insert');
+                    this.counter = 0;
+                }
+            });
             this.count++;
         }
-        this.stopTime('Insert');
+    }
+
+    search(key) {
+        this.startTime();
+        this.userStorage.getItem(key).then((data) => {
+            this.stopTime('Search');
+            console.log(data);
+        });
     }
 
     delete() {
         this.count = 0;
         this.startTime();
-        while (this.count < 1000) {
-            this.userStorage.removeItem('key' + this.count);
+        while (this.count < this.records) {
+            this.userStorage.removeItem('key' + this.count).then( (res) => {
+                this.counter++;
+                if (this.counter === this.records) {
+                    this.stopTime('Delete');
+                }
+            });
             this.count++;
         }
-        this.stopTime('Delete');
     }
 
 }
